@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - dev
 
 jobs:
   build-and-push:
@@ -12,76 +13,123 @@ jobs:
 
     steps:
 
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Build Maven Project
-      run: mvn clean package -DskipTests
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Login to DockerHub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-    - name: Build Config Server Image
-      run: |
-        docker buildx build \
-        --platform linux/amd64 \
-        -t ${{ secrets.DOCKER_USERNAME }}/config-server:latest \
-        ./spring-petclinic-config-server \
-        --push
+      - name: Build Maven Project
+        run: mvn clean package -DskipTests
 
-    - name: Build Discovery Server Image
-      run: |
-        docker buildx build \
-        --platform linux/amd64 \
-        -t ${{ secrets.DOCKER_USERNAME }}/discovery-server:latest \
-        ./spring-petclinic-discovery-server \
-        --push
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Build Customers Service Image
-      run: |
-        docker buildx build \
-        --platform linux/amd64 \
-        -t ${{ secrets.DOCKER_USERNAME }}/customers-service:latest \
-        ./spring-petclinic-customers-service \
-        --push
+      - name: Build Config Server Image
+        run: |
+          docker buildx build \
+          --platform linux/amd64 \
+          -t ${{ secrets.DOCKER_USERNAME }}/config-server:latest \
+          ./spring-petclinic-config-server \
+          --push
 
-    - name: Build Vets Service Image
-      run: |
-        docker buildx build \
-        --platform linux/amd64 \
-        -t ${{ secrets.DOCKER_USERNAME }}/vets-service:latest \
-        ./spring-petclinic-vets-service \
-        --push
+      - name: Build Discovery Server Image
+        run: |
+          docker buildx build \
+          --platform linux/amd64 \
+          -t ${{ secrets.DOCKER_USERNAME }}/discovery-server:latest \
+          ./spring-petclinic-discovery-server \
+          --push
 
-    - name: Build Visits Service Image
-      run: |
-        docker buildx build \
-        --platform linux/amd64 \
-        -t ${{ secrets.DOCKER_USERNAME }}/visits-service:latest \
-        ./spring-petclinic-visits-service \
-        --push
+      - name: Build Customers Service Image
+        run: |
+          docker buildx build \
+          --platform linux/amd64 \
+          -t ${{ secrets.DOCKER_USERNAME }}/customers-service:latest \
+          ./spring-petclinic-customers-service \
+          --push
 
-    - name: Build API Gateway Image
-      run: |
-        docker buildx build \
-        --platform linux/amd64 \
-        -t ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest \
-        ./spring-petclinic-api-gateway \
-        --push
+      - name: Build Vets Service Image
+        run: |
+          docker buildx build \
+          --platform linux/amd64 \
+          -t ${{ secrets.DOCKER_USERNAME }}/vets-service:latest \
+          ./spring-petclinic-vets-service \
+          --push
 
-    - name: Build Admin Server Image
-      run: |
-        docker buildx build \
-        --platform linux/amd64 \
-        -t ${{ secrets.DOCKER_USERNAME }}/admin-server:latest \
-        ./spring-petclinic-admin-server \
-        --push
+      - name: Build Visits Service Image
+        run: |
+          docker buildx build \
+          --platform linux/amd64 \
+          -t ${{ secrets.DOCKER_USERNAME }}/visits-service:latest \
+          ./spring-petclinic-visits-service \
+          --push
+
+      - name: Build API Gateway Image
+        run: |
+          docker buildx build \
+          --platform linux/amd64 \
+          -t ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest \
+          ./spring-petclinic-api-gateway \
+          --push
+
+      - name: Build Admin Server Image
+        run: |
+          docker buildx build \
+          --platform linux/amd64 \
+          -t ${{ secrets.DOCKER_USERNAME }}/admin-server:latest \
+          ./spring-petclinic-admin-server \
+          --push
+
+      - name: Build GenAI Service Image
+        run: |
+          docker buildx build \
+          --platform linux/amd64 \
+          -t ${{ secrets.DOCKER_USERNAME }}/genai-service:latest \
+          ./spring-petclinic-genai-service \
+          --push
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region ${{ secrets.AWS_REGION }} \
+            --name petclinic-cluster
+
+      - name: Deploy Microservices to EKS
+        run: |
+          kubectl apply -f k8s/config-server-deployment.yaml
+          kubectl apply -f k8s/discovery-server-deployment.yaml
+          kubectl apply -f k8s/customers-service-deployment.yaml
+          kubectl apply -f k8s/vets-service-deployment.yaml
+          kubectl apply -f k8s/visits-service-deployment.yaml
+          kubectl apply -f k8s/api-gateway-deployment.yaml
+          kubectl apply -f k8s/admin-server-deployment.yaml
+          kubectl apply -f k8s/genai-service-deployment.yaml
+
+          kubectl rollout restart deployment config-server
+          kubectl rollout restart deployment discovery-server
+          kubectl rollout restart deployment customers-service
+          kubectl rollout restart deployment vets-service
+          kubectl rollout restart deployment visits-service
+          kubectl rollout restart deployment api-gateway
+          kubectl rollout restart deployment admin-server
+          kubectl rollout restart deployment genai-service
