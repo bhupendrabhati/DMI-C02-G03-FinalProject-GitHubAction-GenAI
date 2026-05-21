@@ -1,0 +1,63 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Jenv
+.java-version
+
+# Eclipse
+.settings/
+.classpath
+.project
+
+# IntelliJ IDEA
+.idea
+*.iml
+
+# Visual Studio Code
+.factorypath
+
+# Branch switching
+generated/
+
+**/.DS_Store
+
+gateway.log
+
+# =========================
+# TERRAFORM
+# =========================
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/.terraform.lock.hcl
+
+# =========================
+# LOG FILES
+# =========================
+*.log
+gateway.log
+
+# =========================
+# MACOS
+# =========================
+.DS_Store
+
+# =========================
+# IDE
+# =========================
+.idea/
+.vscode/
+
+# =========================
+# MAVEN
+# =========================
+target/
+
+# =========================
+# KUBERNETES TEMP
+# =========================
+*.tmp
+
+docker-compose.log
+*.log

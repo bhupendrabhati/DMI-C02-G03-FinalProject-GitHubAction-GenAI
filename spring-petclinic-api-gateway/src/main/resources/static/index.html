@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html ng-app="petClinicApp" lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0, minimal-ui"/>
+
+    <title>PetClinic :: Smart Pet Care System</title>
+
+    <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.png"/>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css"/>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="/webjars/font-awesome/css/font-awesome.min.css">
+
+    <!-- AOS Animation -->
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css"/>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/petclinic.css"/>
+    <link rel="stylesheet" href="/css/custom.css"/>
+
+    <!-- Scripts -->
+    <script src="/webjars/bootstrap/js/bootstrap.min.js"></script>
+
+    <script src="/webjars/angularjs/angular.min.js"></script>
+    <script src="/webjars/angular-ui-router/angular-ui-router.min.js"></script>
+
+    <!-- App Scripts -->
+    <script src="/scripts/app.js"></script>
+    <script src="/scripts/genai/chat.js"></script>
+
+    <!-- Owner -->
+    <script src="/scripts/owner-list/owner-list.js"></script>
+    <script src="/scripts/owner-list/owner-list.controller.js"></script>
+    <script src="/scripts/owner-list/owner-list.component.js"></script>
+
+    <script src="/scripts/owner-details/owner-details.js"></script>
+    <script src="/scripts/owner-details/owner-details.controller.js"></script>
+    <script src="/scripts/owner-details/owner-details.component.js"></script>
+
+    <script src="/scripts/owner-form/owner-form.js"></script>
+    <script src="/scripts/owner-form/owner-form.controller.js"></script>
+    <script src="/scripts/owner-form/owner-form.component.js"></script>
+
+    <!-- Pet -->
+    <script src="/scripts/pet-form/pet-form.js"></script>
+    <script src="/scripts/pet-form/pet-form.controller.js"></script>
+    <script src="/scripts/pet-form/pet-form.component.js"></script>
+
+    <!-- Visits -->
+    <script src="/scripts/visits/visits.js"></script>
+    <script src="/scripts/visits/visits.controller.js"></script>
+    <script src="/scripts/visits/visits.component.js"></script>
+
+    <!-- Vets -->
+    <script src="/scripts/vet-list/vet-list.js"></script>
+    <script src="/scripts/vet-list/vet-list.controller.js"></script>
+    <script src="/scripts/vet-list/vet-list.component.js"></script>
+
+    <!-- Infrastructure -->
+    <script src="/scripts/infrastructure/infrastructure.js"></script>
+    <script src="/scripts/infrastructure/httpErrorHandlingInterceptor.js"></script>
+
+</head>
+
+<body ng-controller="RouteController">
+
+<!-- NAVBAR -->
+<layout-nav></layout-nav>
+
+<!-- CUSTOM HOMEPAGE -->
+<div class="container" ng-if="!$location.path() || $location.path() === '/welcome'">
+
+    <!-- HERO SECTION -->
+    <div class="hero-section" data-aos="fade-up">
+
+        <h1 class="hero-title">
+            Welcome to PetClinic 🐾
+        </h1>
+
+        <p class="hero-subtitle">
+            Smart Pet Management System for Clinics, Veterinarians and Pet Owners.
+        </p>
+
+        <div class="hero-buttons">
+
+            <a href="#!/owners" class="btn btn-light btn-lg">
+                <i class="fa fa-search"></i>
+                Find Owners
+            </a>
+
+            <a href="#!/owners/new" class="btn btn-dark btn-lg">
+                <i class="fa fa-plus"></i>
+                Register Owner
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- FEATURE CARDS -->
+    <div class="feature-section">
+
+        <div class="row">
+
+            <div class="col-md-3" data-aos="fade-up">
+                <div class="feature-card">
+                    <i class="fa fa-paw feature-icon"></i>
+                    <h3>Pet Records</h3>
+                    <p>
+                        Manage pet profiles, health records and details easily.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-3" data-aos="fade-up">
+                <div class="feature-card">
+                    <i class="fa fa-user-md feature-icon"></i>
+                    <h3>Veterinarians</h3>
+                    <p>
+                        View experienced veterinarians and specialties.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-3" data-aos="fade-up">
+                <div class="feature-card">
+                    <i class="fa fa-calendar feature-icon"></i>
+                    <h3>Appointments</h3>
+                    <p>
+                        Schedule and track pet visits with ease.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-3" data-aos="fade-up">
+                <div class="feature-card">
+                    <i class="fa fa-heart feature-icon"></i>
+                    <h3>Pet Care</h3>
+                    <p>
+                        Keep your pets healthy and monitored regularly.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- PET SHOWCASE -->
+    <div class="pet-showcase">
+
+        <h2 class="pet-heading">
+            Meet Our Lovely Pets 🐾
+        </h2>
+
+        <div class="pet-grid">
+
+            <div class="pet-item">
+                <img src="/images/dog1.png">
+                <div class="pet-info">
+                    <h3>Golden Retriever</h3>
+                    <p>Friendly & Loyal</p>
+                </div>
+            </div>
+
+            <div class="pet-item">
+                <img src="/images/cat1.png">
+                <div class="pet-info">
+                    <h3>Persian Cat</h3>
+                    <p>Cute & Calm</p>
+                </div>
+            </div>
+
+            <div class="pet-item">
+                <img src="/images/dog2.png">
+                <div class="pet-info">
+                    <h3>Beagle</h3>
+                    <p>Energetic & Smart</p>
+                </div>
+            </div>
+
+            <div class="pet-item">
+                <img src="/images/cat2.png">
+                <div class="pet-info">
+                    <h3>Siamese Cat</h3>
+                    <p>Elegant & Active</p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ANGULAR ROUTE VIEW -->
+<div class="container xd-container">
+    <div ui-view></div>
+</div>
+
+<!-- EMERGENCY BUTTON -->
+<button class="emergency-btn">
+    🐾 Emergency Help
+</button>
+
+<!-- CHATBOX -->
+<div class="chatbox" id="chatbox">
+
+    <button class="chatbox-header" onclick="toggleChatbox()">
+        Chat with Us!
+    </button>
+
+    <div class="chatbox-content" id="chatbox-content">
+
+        <div class="chatbox-messages" id="chatbox-messages"></div>
+
+        <div class="chatbox-footer">
+
+            <input
+                    type="text"
+                    id="chatbox-input"
+                    placeholder="Type a message..."
+                    onkeydown="handleKeyPress(event)"
+            />
+
+            <button onclick="sendMessage()">
+                Send
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- MARKDOWN -->
+<script src="/webjars/marked/marked.min.js"></script>
+
+<!-- AOS -->
+<script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script>
+    AOS.init();
+
+    window.onload = loadChatMessages;
+    window.onbeforeunload = saveChatMessages;
+</script>
+
+<script>
+    angular.module('petClinicApp')
+        .controller('RouteController', function ($scope, $location) {
+            $scope.$location = $location;
+        });
+</script>
+
+<!-- FOOTER -->
+<layout-footer></layout-footer>
+
+<div class="custom-credit">
+    ✨ UI Redesign by <span>BHUPENDRA BHATI</span>
+</div>
+
+
+</body>
+
+</html>

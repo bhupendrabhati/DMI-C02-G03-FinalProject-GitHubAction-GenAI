@@ -1,0 +1,87 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Build Maven Project
+      run: mvn clean package -DskipTests
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build Config Server Image
+      run: |
+        docker buildx build \
+        --platform linux/amd64 \
+        -t ${{ secrets.DOCKER_USERNAME }}/config-server:latest \
+        ./spring-petclinic-config-server \
+        --push
+
+    - name: Build Discovery Server Image
+      run: |
+        docker buildx build \
+        --platform linux/amd64 \
+        -t ${{ secrets.DOCKER_USERNAME }}/discovery-server:latest \
+        ./spring-petclinic-discovery-server \
+        --push
+
+    - name: Build Customers Service Image
+      run: |
+        docker buildx build \
+        --platform linux/amd64 \
+        -t ${{ secrets.DOCKER_USERNAME }}/customers-service:latest \
+        ./spring-petclinic-customers-service \
+        --push
+
+    - name: Build Vets Service Image
+      run: |
+        docker buildx build \
+        --platform linux/amd64 \
+        -t ${{ secrets.DOCKER_USERNAME }}/vets-service:latest \
+        ./spring-petclinic-vets-service \
+        --push
+
+    - name: Build Visits Service Image
+      run: |
+        docker buildx build \
+        --platform linux/amd64 \
+        -t ${{ secrets.DOCKER_USERNAME }}/visits-service:latest \
+        ./spring-petclinic-visits-service \
+        --push
+
+    - name: Build API Gateway Image
+      run: |
+        docker buildx build \
+        --platform linux/amd64 \
+        -t ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest \
+        ./spring-petclinic-api-gateway \
+        --push
+
+    - name: Build Admin Server Image
+      run: |
+        docker buildx build \
+        --platform linux/amd64 \
+        -t ${{ secrets.DOCKER_USERNAME }}/admin-server:latest \
+        ./spring-petclinic-admin-server \
+        --push

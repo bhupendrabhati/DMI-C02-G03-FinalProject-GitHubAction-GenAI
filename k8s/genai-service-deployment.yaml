@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: genai-service
+  labels:
+    app: genai-service
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: genai-service
+
+  template:
+    metadata:
+      labels:
+        app: genai-service
+
+    spec:
+
+      initContainers:
+        - name: wait-for-discovery-server
+          image: busybox
+          command:
+            [
+              "sh",
+              "-c",
+              "until wget -qO- http://discovery-server:8761/actuator/health; do echo waiting for discovery-server; sleep 5; done"
+            ]
+
+      containers:
+        - name: genai-service
+
+          image: bhupendrabhati/genai-service:latest
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 8084
+
+          env:
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://discovery-server:8761/eureka"
+
+            - name: SPRING_CONFIG_IMPORT
+              value: "configserver:http://config-server:8888"
+
+            # Groq API Key
+            - name: SPRING_AI_OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: groq-secret
+                  key: API_KEY
+
+            # Groq OpenAI-compatible endpoint
+            - name: SPRING_AI_OPENAI_BASE_URL
+              value: "https://api.groq.com/openai"
+
+            # Model name
+            - name: SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL
+              value: "llama-3.3-70b-versatile"
+
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8084
+
+            initialDelaySeconds: 40
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8084
+
+            initialDelaySeconds: 90
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: genai-service
+
+spec:
+  selector:
+    app: genai-service
+
+  ports:
+    - protocol: TCP
+      port: 8084
+      targetPort: 8084
+
+  type: ClusterIP
