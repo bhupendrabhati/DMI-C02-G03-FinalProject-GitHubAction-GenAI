@@ -36,18 +36,30 @@ spec:
             - name: MYSQL_DATABASE
               value: petclinic
 
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: username
+
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: password
+
           volumeMounts:
             - name: mysql-storage
               mountPath: /var/lib/mysql
 
           resources:
             requests:
-              cpu: "200m"
-              memory: "512Mi"
+              cpu: "100m"
+              memory: "256Mi"
 
             limits:
-              cpu: "500m"
-              memory: "1Gi"
+              cpu: "300m"
+              memory: "512Mi"
 
       volumes:
         - name: mysql-storage
