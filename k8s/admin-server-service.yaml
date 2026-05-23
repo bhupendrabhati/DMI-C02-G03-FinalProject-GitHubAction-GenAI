@@ -11,5 +11,6 @@ spec:
     app: admin-server
 
   ports:
-  - port: 9091
+  - protocol: TCP
+    port: 9091
     targetPort: 9091
