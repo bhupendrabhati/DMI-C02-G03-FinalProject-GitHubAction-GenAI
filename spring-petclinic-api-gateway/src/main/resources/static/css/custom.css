@@ -106,7 +106,7 @@ body {
     bottom: 20px;
     right: 20px;
     width: 320px;
-    z-index: 999;
+    z-index: 9999;
 }
 
 .chatbox-header {
@@ -165,7 +165,7 @@ body {
     border: none;
     padding: 15px 20px;
     border-radius: 50px;
-    z-index: 999;
+    z-index: 100;
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 

@@ -31,6 +31,12 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: "docker"
+              
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "*"
+              
+            - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
+              value: "always"
 
           resources:
             requests:
@@ -46,17 +52,21 @@ spec:
               path: /actuator/health
               port: 8888
 
-            initialDelaySeconds: 90
-            periodSeconds: 10
+            initialDelaySeconds: 180
+            timeoutSeconds: 5
+            periodSeconds: 15
+            failureThreshold: 10
 
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: 8888
 
-            initialDelaySeconds: 180
-            periodSeconds: 20
-
+            initialDelaySeconds: 300
+            timeoutSeconds: 5
+            periodSeconds: 30
+            failureThreshold: 10
+ 
 ---
 apiVersion: v1
 kind: Service

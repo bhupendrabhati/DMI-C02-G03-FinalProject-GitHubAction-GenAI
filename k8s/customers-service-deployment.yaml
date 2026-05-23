@@ -70,6 +70,23 @@ spec:
                   name: mysql-secret
                   key: password
 
+            # Spring Boot Admin Registration
+            - name: SPRING_BOOT_ADMIN_CLIENT_URL
+              value: "http://admin-server:9090"
+
+            # Expose Actuator Endpoints
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "*"
+
+            - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
+              value: "always"
+            
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "*"
+              
+            - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
+              value: "always"
+
           resources:
             requests:
               cpu: "100m"
@@ -83,14 +100,16 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8081
-
-            initialDelaySeconds: 90
-            periodSeconds: 10
+            initialDelaySeconds: 180
+            timeoutSeconds: 5
+            periodSeconds: 15
+            failureThreshold: 10
 
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: 8081
-
-            initialDelaySeconds: 180
-            periodSeconds: 20
+            initialDelaySeconds: 300
+            timeoutSeconds: 5
+            periodSeconds: 15
+            failureThreshold: 10

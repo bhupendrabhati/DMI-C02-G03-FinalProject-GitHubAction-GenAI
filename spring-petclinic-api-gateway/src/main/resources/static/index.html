@@ -69,7 +69,7 @@
 
 </head>
 
-<body ng-controller="RouteController">
+<body>
 
 <!-- NAVBAR -->
 <layout-nav></layout-nav>
@@ -253,18 +253,11 @@
     window.onbeforeunload = saveChatMessages;
 </script>
 
-<script>
-    angular.module('petClinicApp')
-        .controller('RouteController', function ($scope, $location) {
-            $scope.$location = $location;
-        });
-</script>
-
 <!-- FOOTER -->
 <layout-footer></layout-footer>
 
 <div class="custom-credit">
-    ✨ UI Redesign by <span>BHUPENDRA BHATI</span>
+    ✨ UI Redesign by <span>DMI-Cohort02-Group03 "The CloudPioneer Team"</span>
 </div>
 
 

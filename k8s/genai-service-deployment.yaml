@@ -61,6 +61,12 @@ spec:
             - name: SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL
               value: "llama-3.3-70b-versatile"
 
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "*"
+              
+            - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
+              value: "always"
+
           resources:
             requests:
               cpu: "100m"
@@ -75,16 +81,20 @@ spec:
               path: /actuator/health
               port: 8084
 
-            initialDelaySeconds: 120
-            periodSeconds: 10
+            initialDelaySeconds: 180
+            timeoutSeconds: 5
+            periodSeconds: 15
+            failureThreshold: 10
 
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: 8084
 
-            initialDelaySeconds: 240
-            periodSeconds: 20
+            initialDelaySeconds: 300
+            timeoutSeconds: 5
+            periodSeconds: 15
+            failureThreshold: 10
 
 ---
 apiVersion: v1

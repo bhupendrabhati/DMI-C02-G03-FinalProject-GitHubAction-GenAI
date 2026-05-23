@@ -42,6 +42,12 @@ spec:
           env:
             - name: SPRING_CONFIG_IMPORT
               value: "configserver:http://config-server:8888"
+            
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "*"
+              
+            - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
+              value: "always"
 
           resources:
             requests:
@@ -56,17 +62,19 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8761
-
-            initialDelaySeconds: 90
-            periodSeconds: 10
+            initialDelaySeconds: 180
+            timeoutSeconds: 5
+            periodSeconds: 15
+            failureThreshold: 10
 
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: 8761
-
-            initialDelaySeconds: 180
-            periodSeconds: 20
+            initialDelaySeconds: 300
+            timeoutSeconds: 5
+            periodSeconds: 15
+            failureThreshold: 10
 
 ---
 apiVersion: v1

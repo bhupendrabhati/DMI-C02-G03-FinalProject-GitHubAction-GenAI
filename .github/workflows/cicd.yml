@@ -7,14 +7,22 @@ on:
       - dev
 
 jobs:
-  build-and-push:
+  build-and-deploy:
 
     runs-on: ubuntu-latest
 
     steps:
 
+      # =========================
+      # Checkout Repository
+      # =========================
+
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      # =========================
+      # Configure AWS
+      # =========================
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -23,23 +31,43 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # =========================
+      # DockerHub Login
+      # =========================
+
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      # =========================
+      # Setup Java
+      # =========================
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
+
+      # =========================
+      # Build Maven Project
+      # =========================
 
       - name: Build Maven Project
         run: mvn clean package -DskipTests
 
+      # =========================
+      # Setup Docker Buildx
+      # =========================
+
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      # =========================
+      # Build & Push Images
+      # =========================
 
       - name: Build Config Server Image
         run: |
@@ -105,8 +133,16 @@ jobs:
           ./spring-petclinic-genai-service \
           --push
 
+      # =========================
+      # Install kubectl
+      # =========================
+
       - name: Install kubectl
         uses: azure/setup-kubectl@v4
+
+      # =========================
+      # Configure kubeconfig
+      # =========================
 
       - name: Update kubeconfig
         run: |
@@ -114,22 +150,175 @@ jobs:
             --region ${{ secrets.AWS_REGION }} \
             --name petclinic-cluster
 
-      - name: Deploy Microservices to EKS
+      # =========================
+      # Install eksctl
+      # =========================
+
+      - name: Install eksctl
         run: |
+          curl --silent --location \
+          "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" \
+          | tar xz -C /tmp
+
+          sudo mv /tmp/eksctl /usr/local/bin
+
+      # =========================
+      # Install EBS CSI Driver
+      # =========================
+
+      - name: Install EBS CSI Driver
+        run: |
+          eksctl create addon \
+            --name aws-ebs-csi-driver \
+            --cluster petclinic-cluster \
+            --region ${{ secrets.AWS_REGION }} \
+            --force || true
+
+      # =========================
+      # Create Kubernetes Secrets
+      # =========================
+
+      - name: Create MySQL Secret
+        run: |
+          kubectl create secret generic mysql-secret \
+            --from-literal=username=admin \
+            --from-literal=password=${{ secrets.MYSQL_PASSWORD }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Create Groq Secret
+        run: |
+          kubectl create secret generic groq-secret \
+            --from-literal=API_KEY=${{ secrets.GROQ_API_KEY }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      # =========================
+      # Deploy MySQL First
+      # =========================
+
+      - name: Deploy MySQL
+        run: |
+          kubectl apply -f k8s/mysql-pvc.yaml
+          kubectl apply -f k8s/mysql-service.yaml
+          kubectl apply -f k8s/mysql-deployment.yaml
+
+      # =========================
+      # Wait For MySQL
+      # =========================
+
+      - name: Wait for MySQL
+        run: |
+          kubectl rollout status deployment/mysql --timeout=300s
+
+      # =========================
+      # Deploy Config Server
+      # =========================
+
+      - name: Deploy Config Server
+        run: |
+          kubectl apply -f k8s/config-server-service.yaml
           kubectl apply -f k8s/config-server-deployment.yaml
+
+      - name: Wait for Config Server
+        run: |
+          kubectl rollout status deployment/config-server --timeout=300s
+
+      # =========================
+      # Deploy Discovery Server
+      # =========================
+
+      - name: Deploy Discovery Server
+        run: |
+          kubectl apply -f k8s/discovery-server-service.yaml
           kubectl apply -f k8s/discovery-server-deployment.yaml
+
+      - name: Wait for Discovery Server
+        run: |
+          kubectl rollout status deployment/discovery-server --timeout=300s
+
+      # =========================
+      # Deploy Remaining Services
+      # =========================
+
+      - name: Deploy Remaining Services
+        run: |
+          kubectl apply -f k8s/customers-service-service.yaml
           kubectl apply -f k8s/customers-service-deployment.yaml
+
+          kubectl apply -f k8s/vets-service-service.yaml
           kubectl apply -f k8s/vets-service-deployment.yaml
+
+          kubectl apply -f k8s/visits-service-service.yaml
           kubectl apply -f k8s/visits-service-deployment.yaml
+
+          kubectl apply -f k8s/api-gateway-service.yaml
           kubectl apply -f k8s/api-gateway-deployment.yaml
+
+          kubectl apply -f k8s/admin-server-service.yaml
           kubectl apply -f k8s/admin-server-deployment.yaml
+
+          kubectl apply -f k8s/genai-service-service.yaml
           kubectl apply -f k8s/genai-service-deployment.yaml
 
-          kubectl rollout restart deployment config-server
-          kubectl rollout restart deployment discovery-server
-          kubectl rollout restart deployment customers-service
-          kubectl rollout restart deployment vets-service
-          kubectl rollout restart deployment visits-service
-          kubectl rollout restart deployment api-gateway
-          kubectl rollout restart deployment admin-server
-          kubectl rollout restart deployment genai-service
+      # =========================
+      # Restart Deployments
+      # =========================
+
+      # - name: Restart Deployments
+      #   run: |
+      #     kubectl rollout restart deployment config-server
+      #     kubectl rollout restart deployment discovery-server
+      #     kubectl rollout restart deployment customers-service
+      #     kubectl rollout restart deployment vets-service
+      #     kubectl rollout restart deployment visits-service
+      #     kubectl rollout restart deployment api-gateway
+      #     kubectl rollout restart deployment admin-server
+      #     kubectl rollout restart deployment genai-service
+
+      # =========================
+      # Wait For Rollout
+      # =========================
+
+      - name: Wait for Deployments
+        run: |
+          kubectl rollout status deployment/config-server --timeout=300s
+          kubectl rollout status deployment/discovery-server --timeout=300s
+          kubectl rollout status deployment/customers-service --timeout=300s
+          kubectl rollout status deployment/vets-service --timeout=300s
+          kubectl rollout status deployment/visits-service --timeout=300s
+          kubectl rollout status deployment/api-gateway --timeout=300s
+          kubectl rollout status deployment/admin-server --timeout=300s
+          kubectl rollout status deployment/genai-service --timeout=300s
+
+      # =========================
+      # Show Final Status
+      # =========================
+
+      - name: Get Pods
+        run: kubectl get pods
+
+      - name: Get Services
+        run: kubectl get svc
+
+      # =========================
+      # Wait For API Gateway LoadBalancer
+      # =========================
+
+      - name: Wait for API Gateway LoadBalancer
+        run: |
+          echo "Waiting for API Gateway LoadBalancer..."
+
+          for i in {1..30}; do
+            LB=$(kubectl get svc api-gateway -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+
+            if [ -n "$LB" ]; then
+              echo "LoadBalancer Ready!"
+              echo "Application URL: http://$LB"
+              exit 0
+            fi
+
+            echo "Still waiting for LoadBalancer..."
+            sleep 20
+          done
+
+          echo "LoadBalancer creation timed out"
+          exit 1
