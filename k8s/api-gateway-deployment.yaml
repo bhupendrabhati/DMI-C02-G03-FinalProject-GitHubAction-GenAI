@@ -46,6 +46,12 @@ spec:
             - name: SPRING_CONFIG_IMPORT
               value: "configserver:http://config-server:8888"
 
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "*"
+              
+            - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
+              value: "always"
+
           resources:
             requests:
               cpu: "100m"
