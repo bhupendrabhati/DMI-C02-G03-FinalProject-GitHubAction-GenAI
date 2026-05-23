@@ -85,22 +85,22 @@ spec:
               cpu: "300m"
               memory: "512Mi"
 
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8083
+          # readinessProbe:
+          #   httpGet:
+          #     path: /actuator/health
+          #     port: 8083
 
-            initialDelaySeconds: 180
-            timeoutSeconds: 5
-            periodSeconds: 15
-            failureThreshold: 10
+          #   initialDelaySeconds: 180
+          #   timeoutSeconds: 5
+          #   periodSeconds: 15
+          #   failureThreshold: 10
 
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8083
+          # livenessProbe:
+          #   httpGet:
+          #     path: /actuator/health
+          #     port: 8083
 
-            initialDelaySeconds: 300
-            timeoutSeconds: 5
-            periodSeconds: 15
-            failureThreshold: 10
+          #   initialDelaySeconds: 300
+          #   timeoutSeconds: 5
+          #   periodSeconds: 15
+          #   failureThreshold: 10
