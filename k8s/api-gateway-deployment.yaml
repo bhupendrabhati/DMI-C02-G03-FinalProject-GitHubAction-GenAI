@@ -33,7 +33,7 @@ spec:
       containers:
         - name: api-gateway
 
-          image: bhupendrabhati/api-gateway:latest
+          image: bhupendrabhati/api-gateway:v3
           imagePullPolicy: Always
 
           ports:
